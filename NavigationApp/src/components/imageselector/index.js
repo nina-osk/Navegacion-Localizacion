@@ -1,54 +1,50 @@
 import React from 'react';
 import {UseState} from 'react';
-import {View, StyleSheet,Button,PermissionsAndroid} from 'react-native';
-import * as ImagePicker from 'react-native-image-picker';
+import {View, StyleSheet,Button,Platform } from 'react-native';
+import {launchCamera} from 'react-native-image-picker';
+import { PERMISSIONS, request, RESULTS} from 'react-native-permissions';
 import {COLORS} from '../../constants/Colors' 
 
-const ImageSelector=(props)=>{
-    const[pickedUri,setPickedUri]=useState();
-    
-    const verifyPermission = async ()=>{
-        try{
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.CAMERA,{
-                    title: 'CAMERA EXMPLE APP Camera Permisison',
-                    message: 'Need access to your camera',
-                    buttonNeutral: 'Ask me later',
-                    buttonNegative:'Cancel',
-                    buttonPositive:'Ok',
-                } );
-            if(granted=== PermissionsAndroid.RESULTS.GRANTED){
-                return true;}
-                else{
-               return false; }
-        }
-         catch(e){ console.warn(e); }
-    };
- 
+const ImageSelector=({onImage})=>{
+    const[pickerResponse,setPickerResponse]=useState();
 
-    const handleTakeImage = async ()=>{
-     const isCameraOk = await verifyPermission();
-     if (!isCameraOk) return;
-     let options = {
-         storageOptions:{
-             skipBackup: true,
-             path:'images',
-         },
-     };
 
-    ImagePicker.launchCamera(options,(response)=>{
-             setPickedUri(response.assets[0].uri)
-         })
+    //Validar IOS
+    const IS_IOS = Platform.OS=== 'ios';
 
+    const handleTakePicture = async ()=>{
+    const options ={
+        selectionLimit:1,
+        mediaType:'photo',
+        includeBase64: false,
+    }
+
+    let granted;
+    if(IS_IOS){
+        granted = await request(PERMISSIONS.IOS.CAMERA)
+    } else {
+        granted = await request(PERMISSIONS.ANDROID.CAMERA)
+    }
+
+    if(granted===RESULTS.GRANTED){
+        launchCamera(options, (res)=>{
+            if(!res.didCancel && !res.error){
+                setPickerResponse(res.assets[0]);
+                onImage && onImage(res.asset[0].uri);
+            }
+        })
+    } else{
+        console.warn('Permission denied')
+    }
     };
     return(
         <View style={styles.container}>
         <View style={styles.preview}>
-            {!pickedUri ? (<Text>No hay imagen seleccionada</Text>):(
-                <Image style={styles.image} source={{ uri:pickedUri}}></Image>)
+            {!pickerResponse ? (<Text>No hay imagen seleccionada</Text>):(
+                <Image style={styles.image} source={{ uri:pickerResponse}}></Image>)
             }
         </View>
-        <Button title="Tomar foto" color={COLORS.MAROON} onPress={() =>handleTakeImage() }></Button>
+        <Button title="Tomar foto" color={COLORS.MAROON} onPress={() =>handleTakePicture() }></Button>
         </View>
         )}
 
