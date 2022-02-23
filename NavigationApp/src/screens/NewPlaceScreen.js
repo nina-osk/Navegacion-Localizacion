@@ -5,11 +5,14 @@ import { View, Text, StyleSheet, TextInput, Button, ScrollView } from 'react-nat
 import {COLORS} from '../constants/Colors';
 import { addPlace } from '../store/places.actions';
 import ImageSelector from '../components/imageselector';
+import LocationSelector from '../components/locationSelector';
 
 const NewPlaceScreen = () => {
 
     const dispatch=useDispatch()
     const [title,setTitle]=useState('');
+    const [image,setImage]=useState('');
+    const [location, setLocation]=useState('');
 
     const handleTitleChange=(text)=> setTitle(text)
     //Boton 
@@ -19,14 +22,17 @@ const NewPlaceScreen = () => {
     };
 
     const handleOnImage = (uri) =>{
-        console.warn(uri)
+        setImage(uri)
     }
-
+    const handleOnLocation = (position) =>{
+        setImage(position)
+    }
     return (
         <ScrollView>
         <View style={styles.container}>
             <Text style={styles.label}>Titulo</Text>
-            <ImageSelector on Image={handleOnImage}></ImageSelector>
+            <ImageSelector onImage={handleOnImage}></ImageSelector>
+            <LocationSelector></LocationSelector>
             <TextInput style={styles.input} 
             onChangeText={handleTitleChange}
             value={title}/>
